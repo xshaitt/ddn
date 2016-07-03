@@ -1,0 +1,25 @@
+<?php
+require('../../class/connect.php');
+require('../../class/db_sql.php');
+require('../../data/dbcache/class.php');
+require('setconfig.php');//导入配置文件
+require('dofunctions.php');//导入函数库文件
+$link=db_connect();
+$empire=new mysqlquery();
+$editor=1;
+$enews=$_POST['enews'];
+if(empty($enews))
+{
+	$enews=$_GET['enews'];
+}
+if($enews=='UpdateMood')//提交表态
+{
+	user_UpdateMood($_POST);
+}
+else
+{
+	printerror2('您来自的链接不存在','');
+}
+db_close();
+$empire=null;
+?>

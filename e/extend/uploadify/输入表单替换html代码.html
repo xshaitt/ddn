@@ -1,0 +1,183 @@
+
+<script type="text/javascript" src="../extend/uploadify/jquery-1.10.2.min.js"></script>
+<script type="text/javascript" src="../extend/uploadify/jquery.uploadify.min.js"></script>
+<script type="text/javascript">
+ var picIndex=1;
+ $.format = function (source, params) {
+	if (arguments.length == 1)
+		return function () {
+			var args = $.makeArray(arguments);
+			args.unshift(source);
+			return $.format.apply(this, args);
+		};
+	if (arguments.length > 2 && params.constructor != Array) {
+		params = $.makeArray(arguments).slice(1);
+	}
+	if (params.constructor != Array) {
+		params = [params];
+	}
+	$.each(params, function (i, n) {
+		source = source.replace(new RegExp("\\{" + i + "\\}", "g"), n);
+	});
+	return source;
+};
+function fileError(file, errorCode, errorMsg){
+	switch(errorCode) {
+		case -100:
+			alert("上传的文件数量已经超出系统限制！");
+			break;
+		case -110:
+			alert("文件 ["+file.name+"] 大小超出系统限制！");
+			break;
+		case -120:
+			alert("文件 ["+file.name+"] 大小异常！");
+			break;
+		case -130:
+			alert("文件 ["+file.name+"] 类型不正确！");
+			break;
+	}
+}
+$(function() {
+<?php	
+$loginuserid        = getcvar('loginuserid',1);       //用户ID
+$loginusername      = getcvar('loginusername',1);     //用户名
+
+?>
+	$('#img_upload').uploadify({
+            'formData'      	: {
+			'classid' : '<?=$classid?>',
+			'filepass':'<?=$newstime?>',
+			'username':'<?=$loginusername?>',
+			'userid':'<?=$loginuserid?>'			
+			
+			},
+            'swf'      : '../extend/uploadify/uploadify.swf',
+            'uploader' : '../extend/uploadify/uploadify.php',
+            //在浏览窗口底部的文件类型下拉菜单中显示的文本
+            'buttonCursor':'hand',
+            'buttonImage':'../extend/uploadify/button_images.png','width':99,'height':25,
+            'fileTypeExts':'*.jpg;*.png;*.gif',
+            //上传文件的大小限制
+            'fileSizeLimit':'10MB',
+            //上传数量
+            'multi':true,
+            'queueSizeLimit' : 100,
+            //文件较多，时间设大一些
+            'successTimeout':120,
+            //返回一个错误，选择文件的时候触发
+            'onSelectError':fileError,
+            //检测FLASH失败调用
+            'onFallback':function(){
+                alert("您未安装FLASH控件，无法上传图片！请安装FLASH控件后再试。");
+            },
+            //上传到服务器，服务器返回相应信息到data里
+            'onUploadSuccess':function(file, data, response){
+			
+				var obj=jQuery.parseJSON(data);
+				if(obj.error){
+                    alert("上传出现错误！");
+                }else{
+                    addPicLine(picIndex);
+                    $("#mbigpic"+picIndex).val(obj.big);
+                    $("#mpicname"+picIndex).val(obj.name);
+					if(obj.small){
+						$("#msmallpic"+picIndex).val(obj.small);
+						$("#preImg"+picIndex).attr("src",obj.small);
+					}else{
+						$("#msmallpic"+picIndex).val(obj.big);
+						$("#preImg"+picIndex).attr("src",obj.big);
+					}
+                    picIndex++;
+
+                }
+					
+            }, 
+			'onUploadStart': function (file) {
+                    $("#img_upload").uploadify("settings", "formData", {'mrnd':'<?=$mrnd?>',
+					'addwater':$('#addwater').is(':checked'),
+					'mcreatespic':$('#mcreatespic').is(':checked'),
+			'mcreatespicwidth':$('#mcreatespicwidth').val(),
+			'mcreatespicheight':$('#mcreatespicheight').val()});
+                    //在onUploadStart事件中，也就是上传之前，把参数写好传递到后台。
+            }
+
+        });
+	<?php
+    if($ecmsfirstpost==1)
+    {
+	?>
+	picIndex=1;
+	<?php
+    }
+    else
+    {
+	$morepicpath="";
+	$morepicnum=0;
+	if($r[morepic])
+    	{
+    		$r[morepic]=stripSlashes($r[morepic]);
+    		//地址
+    		$j=0;
+    		$pd_record=explode("\r\n",$r[morepic]);
+    		for($i=0;$i<count($pd_record);$i++)
+    		{
+			$j=$i+1;
+    			$pd_field=explode("::::::",$pd_record[$i]);
+			?>
+					addPicLine(<?=$j?>);
+                    $("#msmallpic<?=$j?>").val("<?=$pd_field[0]?>");
+                    $("#mbigpic<?=$j?>").val("<?=$pd_field[1]?>");
+                    $("#mpicname<?=$j?>").val("<?=$pd_field[2]?>");
+                    $("#preImg<?=$j?>").attr("src","<?=$pd_field[1]?>");
+                    picIndex++;
+			<?php 
+    		}
+    		$morepicnum=$j;
+    	}
+    }
+    ?>
+
+});
+</script>
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td height="25">
+	  <input type="checkbox" name="addwater" id="addwater" value="1">加水印&nbsp;<input type="checkbox" name="mcreatespic" id="mcreatespic" value="1" onclick="if(this.checked){setmcreatespic.style.display='';}else{setmcreatespic.style.display='none';}" checked>生成缩图
+	  <span id="setmcreatespic" style="display=none">：<input type=text name="mcreatespicwidth" id="mcreatespicwidth" size=4 value="<?=$public_r[spicwidth]?>">*<input type=text name="mcreatespicheight" id="mcreatespicheight" size=4 value="<?=$public_r[spicheight]?>">(宽*高)</span>
+ </td>
+  </tr>
+   <tr>
+    <td height="25">
+	<input type="text" id="img_upload" name="img_upload" style="width:265px"/>
+ </td>
+  </tr>
+  <tr> 
+    <td>
+	<div id="picBefore" style="clear:both"></div>
+
+     <textarea id="picTable" style="display:none;">
+                                <table id="picTable{0}" border="0" style="float:left;">
+                                    <tr>
+                                        <td>
+                                            <div>
+											缩略：<input type="text" id="msmallpic{0}" name="msmallpic[]" style="width:160px" ondblclick="SpOpenChFile(1,'msmallpic{0}');" onfocus="$('#preImg{0}').attr('src',$('#msmallpic{0}').val());"/><br>
+											大图：<input type="text" id="mbigpic{0}" name="mbigpic[]" style="width:160px"  ondblclick="SpOpenChFile(1,'mbigpic{0}');" onfocus="$('#preImg{0}').attr('src',$('#mbigpic{0}').val());"/>
+                                                <a href="javascript:void(0);" onclick="$('#picTable{0}').remove();" class="pn-opt">删除</a></div>
+                                            <div>
+                                            <div style="padding-top: 2px">&lt;textarea style="width:200px;height:60px;" name="mpicname[]" id="mpicname{0}" maxlength="255"&gt;&lt;/textarea&gt;</div>
+                                        </td>
+                                        <td><img id="preImg{0}" alt="预览" noResize="true" style="width:110px;height:110px;background-color:#ccc;border:1px solid #333"/></td>
+                                    </tr>
+                                </table>
+                            </textarea>
+                            <script type="text/javascript">
+                                var picTpl = $.format($("#picTable").val());
+                                function addPicLine(picIndex) {
+                                    $('#picBefore').before(picTpl(picIndex));
+                                }
+      </script>
+
+</td>
+  </tr>
+</table>
