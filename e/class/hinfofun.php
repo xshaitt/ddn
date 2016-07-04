@@ -234,6 +234,31 @@ function AddNews($add,$userid,$username){
 	//索引表
 	$sql=$empire->query("insert into {$dbtbpre}ecms_".$class_r[$add[classid]][tbname]."_index(classid,checked,newstime,truetime,lastdotime,havehtml) values('$add[classid]','$add[checked]','$newstime','$truetime','$lastdotime','$havehtml');");
 	$id=$empire->lastid();
+	//在插入索引表之后，检查是否需要插入到ztinfo表
+	//如果是增加信息的话就要加上验证机制，如果匹配到了了预设的关键字，那么就插入指定的记录
+	/*
+	 * 1.查询出所有的管理字
+	 * 2.拼接标题与内容
+	 * 3.循环验证每次只要匹配成功，则增加相对应的记录
+	 * */
+	$sql = $empire->query("select * from keyword_manage");
+	$result = $empire->getAll($sql);
+	//查询出所有的关键字
+	foreach ($result as $v)
+	{
+		if(strpos($add['title'].$add['newstext'],$v['keyword']) !== false)
+		{
+			//根据关键字绑定的专题id来插入多条记录
+			$specialArr = explode(',',$v['special']);
+			foreach($specialArr as $speciaid)
+			{
+				$time = time();
+				$empire->query("insert into phome_enewsztinfo (`ztid`,`cid`,`classid`,`id`,`newstime`,`mid`,`isgood`) values ('$speciaid','0','$add[classid]','$id','$time','1','0')");
+			}
+
+		}
+	}
+	//循环匹配，成功一次则插入一条记录
 	$pubid=ReturnInfoPubid($add['classid'],$id);
 	$infotbr=ReturnInfoTbname($class_r[$add[classid]][tbname],$add['checked'],$ret_r['tb']);
 	//主表
