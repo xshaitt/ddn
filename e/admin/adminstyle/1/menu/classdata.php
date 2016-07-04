@@ -514,6 +514,11 @@ if($r[domovenews]||$r[doinfodoc]||$r[dodelinfodata]||$r[dorepnewstext]||$r[dotot
   <tr id="itemcother" style="display:none"> 
     <td class="list1">
 		<table border='0' cellspacing='0' cellpadding='0'>
+            <tr>
+                <td class="file">
+                    <a href="../../KeywordManage.php" target="main" onmouseout="this.style.fontWeight=''" onmouseover="this.style.fontWeight='bold'">关键字管理</a>
+                </td>
+            </tr>
 		<?
 		if($r[dototaldata])
 		{

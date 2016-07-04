@@ -99,5 +99,14 @@ class mysqlquery
 	{
 		return mysql_affected_rows($GLOBALS['link']);
 	}
+	function getAll($sql)
+	{
+		$arr = false;
+		while($result=mysql_fetch_assoc($sql))        //循环获取查询记录
+		{
+			$arr[] = $result;
+		}
+		return $arr;
+	}
 }
 ?>
